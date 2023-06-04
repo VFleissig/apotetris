@@ -124,6 +124,7 @@ void spawnBlock() {
     for(i = 0; i < 3; i++) {
         for(j = 0; j < 3; j++) {
             if(currentBlock[i][j] == MOVING && board[blockY + i][blockX + j] != EMPTY) {
+                printf("\nblock[%d][%d] caused gameover\n", blockY + i, blockX + j);
                 printf("Game Over\n");
                 exit(0);
             }
@@ -216,7 +217,7 @@ bool piece_movable_right(){
     for(int i = 0; i<11; i++){
         for(int j = 0; j < 11; j++){
             if(board[i][j]==MOVING) {
-                if(j == 10){
+                if(j == 10 || board[i+1][j+1] == FILLED || board[i][j+1] == FILLED){
                     return false;
                 }
 
@@ -232,7 +233,7 @@ bool piece_movable_left(){
     for(int i = 0; i<11; i++){
         for(int j = 0; j < 11; j++){
             if(board[i][j]==MOVING) {
-                if(j == 0){
+                if(j == 0 || board[i+1][j+1] == FILLED){
                     return false;
                 }
 
@@ -280,10 +281,26 @@ void move_piece_left(){
     }
 }
 
+int check_for_filled_line(){
+    for(int i = 0; i < BOARD_HEIGHT; i++){
+        for(int j = 0; j< BOARD_WIDTH; j++){
+            if(board[i][j]==EMPTY/*board[i][j]!=FILLED || board[i][j]!=MOVING*/){
+                printf("broken at board[%d][%d]", i, j);
+                break;
+            }   
+            if(j == 10){
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
 
 
 // Function to update the board (move the current block down)
 void updateBoard() {
+    int linecheck = -1;
     printf("getshere");
     // If the block can move down, erase it from the current position
         bool movable = is_movable();
@@ -296,6 +313,27 @@ void updateBoard() {
         } else {
             // If the block can't move down, spawn a new one
             transformMOVINGtoFILLED();
+
+            while(true){
+                linecheck = check_for_filled_line();
+                printf("\nlinecheck: %d\n", linecheck);
+                if(linecheck == -1)
+                    break;
+                for(int i = 0; i < BOARD_HEIGHT; i++){
+                    for(int j = 0; j < BOARD_WIDTH; j++){
+                        if(i < linecheck && board[i][j] == FILLED){
+                            board[i][j] = MOVING;
+                        }
+                        else if(i == linecheck){
+                            board[i][j] = EMPTY;
+                        }
+                    }
+                }
+                move_blocks();
+                transformMOVINGtoFILLED();
+            }
+            sleep(1);
+            
             spawnBlock();
         }
 
@@ -480,12 +518,20 @@ int checkforinput(unsigned char* knob_mem_base, int prev_knob_val){
 
     printf("\nmovable left: %d \n movable right: %d \n", piece_movable_left, piece_movable_right);
      //if(prev_knob_val + 174762 < int_val){
-    for(int i = 0; i < (int_val-prev_knob_val)/262144; i++)
+    for(int i = 0; i < (int_val-prev_knob_val+302145/2)/262144; i++){
+        if(!piece_movable_left)
+            break;
         move_piece_left();
+    }
      //}
      //else if(prev_knob_val - 174762 > int_val){
-    for(int i = 0; i < (prev_knob_val-int_val)/262144; i++)
+    for(int i = 0; i < (prev_knob_val-int_val+302145/2)/262144; i++){
+        if(!piece_movable_right)
+
+            break;
         move_piece_right();
+    }
+    prev_knob_val = int_val;
      //}
      return int_val;
 
@@ -592,3 +638,4 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+
