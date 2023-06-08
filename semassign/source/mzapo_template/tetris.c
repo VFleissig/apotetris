@@ -143,7 +143,7 @@ void increment_score(unsigned char * mem_base) {
     score = (score << 1) + 1;
     *(volatile uint32_t * )(mem_base + SPILED_REG_LED_LINE_o) = score;
     printf("led score:", score);
-    if (score >= 2 /*4294967295*/ ) {
+    if (score >= 64 /*4294967295*/ ) {
         printf("You won!\n");
         exit(0);
     }
@@ -249,7 +249,7 @@ void init_board() {
 void spawn_block() {
     blockX = (BOARD_WIDTH / 2) - 1;
     blockY = 0;
-    shape = 0;//rand() % 3;
+    shape = rand() % 3;
 
     //copy the chosen shape to the current block array
     int i, j;
@@ -659,8 +659,6 @@ bool piece_movable_left() {
                 }
 
             }
-            //printf("i:%d j:%d\n", i, j);
-            //drawBoard();
         }
     }
     return true;
@@ -677,8 +675,6 @@ void move_piece_right() {
                     board[i][j] = EMPTY;
 
                 }
-                //printf("i:%d j:%d\n", i, j);
-                //drawBoard();
             }
         }
     }
@@ -694,8 +690,6 @@ void move_piece_left() {
                     board[i][j] = EMPTY;
 
                 }
-                //printf("i:%d j:%d\n", i, j);
-                //drawBoard();
             }
         }
     }
@@ -716,17 +710,17 @@ int check_for_filled_line() {
     return -1;
 }
 
-// Function to update the board (move the current block down)
+//function to update the board (move the current block down)
 void update_board(unsigned char * mem_base) {
     int linecheck = -1;
     printf("getshere");
-    // If the block can move down, erase it from the current position
+    //if the block can move down, erase it from the current position
     bool movable = is_movable();
     printf("\nis movable? %d \n", movable);
     if (movable) {
         move_blocks();
     } else {
-        // If the block can't move down, spawn a new one
+        //if the block can't move down, spawn a new one
         transform_moving_to_filled();
 
         while (true) {
@@ -849,9 +843,8 @@ void parse_menu() {
 
     int p = 0;
 
-    /* If mapping fails exit with error code */
+    /*if mapping fails exit with error code */
     if (mem_base == NULL) {
-        //free(menu);
         exit(1);
     }
 
@@ -876,7 +869,6 @@ int show_mainMenu() {
         }
 
         game_started = 0;
-        //sleep(1);
     }
 }
 
@@ -927,10 +919,7 @@ int checkforinput_mainmenu(unsigned char * knob_mem_base, int prev_knob_val) {
      */
     rgb_knobs_value = * (volatile uint32_t * )(knob_mem_base + SPILED_REG_KNOBS_8BIT_o);
 
-    /*
-     * Store RGB knobs values to the corersponding components controlling
-     * a color/brightness of the RGB LEDs
-     */
+    //smooth color changing during menu selection
     *(volatile uint32_t * )(knob_mem_base + SPILED_REG_LED_RGB1_o) += 15;
 
     *(volatile uint32_t * )(knob_mem_base + SPILED_REG_LED_RGB2_o) += 15;
@@ -986,28 +975,10 @@ int checkforinput(unsigned char * knob_mem_base, int prev_knob_val) {
         .tv_nsec = 200 * 1000 * 1000
     };
 
-    /*
-     * Access register holding 8 bit relative knobs position
-     * The type "(volatile uint32_t*)" casts address obtained
-     * as a sum of base address and register offset to the
-     * pointer type which target in memory type is 32-bit unsigned
-     * integer. The "volatile" keyword ensures that compiler
-     * cannot reuse previously read value of the location.
-     */
+
     rgb_knobs_value = * (volatile uint32_t * )(knob_mem_base + SPILED_REG_KNOBS_8BIT_o);
 
-    /* Store the read value to the register controlling individual LEDs */
-    //*(volatile uint32_t*)(knob_mem_base + SPILED_REG_LED_LINE_o) = rgb_knobs_value;
 
-    /*
-     * Store RGB knobs values to the corersponding components controlling
-     * a color/brightness of the RGB LEDs
-     */
-    //*(volatile uint32_t*)(knob_mem_base + SPILED_REG_LED_RGB1_o) = rgb_knobs_value;
-
-    //*(volatile uint32_t*)(knob_mem_base + SPILED_REG_LED_RGB2_o) = rgb_knobs_value;
-
-    /* Assign value read from knobs to the basic signed and unsigned types */
     int_val = rgb_knobs_value;
     uint_val = rgb_knobs_value;
 
@@ -1020,13 +991,6 @@ int checkforinput(unsigned char * knob_mem_base, int prev_knob_val) {
     /* Print values */
     printf("int %10d uint 0x%08x\n", int_val, uint_val);
 
-    /*
-     * Wait for time specified by "loop_delay" variable.
-     * Use monotonic clocks as time reference to ensure
-     * that wait interval is not prolonged or shortened
-     * due to real time adjustment.
-     */
-    //clock_nanosleep(CLOCK_MONOTONIC, 0, &loop_delay, NULL);
 
     printf("\nmovable left: %d \n movable right: %d \n", piece_movable_left, piece_movable_right);
     //if(prev_knob_val + 174762 < int_val){
@@ -1043,14 +1007,14 @@ int checkforinput(unsigned char * knob_mem_base, int prev_knob_val) {
             break;
         move_piece_right();
     }
-    if(prev_knob_val - int_val < 10000){
+    if(abs(prev_knob_val - int_val) < 5000){
         for (int i = 0; i < (prev_knob_val - int_val + 400/2) / 900; i++) {
             if (!piece_movable_right)
                 break;
             rotate_block_right();   
         }
     }
-    if(prev_knob_val - int_val < 10000){
+    if(abs(prev_knob_val - int_val) < 5000){
         for (int i = 0; i < (int_val - prev_knob_val + 400/2) / 900; i++) {
             if (!piece_movable_left)
                 break;
@@ -1138,7 +1102,6 @@ int main(int argc, char * argv[]) {
     if (serialize_lock(1) <= 0) {
         printf("System is occupied\n");
 
-        //menu = malloc(sizeof(char)*320*320);
 
         if (1) {
             printf("Waiting\n");
@@ -1159,8 +1122,6 @@ int main(int argc, char * argv[]) {
     }
 
     start_app();
-
-    //lightup(mem_base);
 
     printf("Hello world\n");
 
