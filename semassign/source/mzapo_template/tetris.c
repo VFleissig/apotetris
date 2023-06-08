@@ -50,6 +50,8 @@
 
 int char_comp;
 
+int shape;
+
 unsigned char * mem_base;
 unsigned char * parlcd_mem_base;
 unsigned char * knob_mem_base;
@@ -209,7 +211,8 @@ int IBlock[3][3] = {
     }
 };
 
-int currentBlock[3][3];
+int current_block[3][3];
+int orientation = 0;
 
 //function to draw the board in terminal
 void drawBoard() {
@@ -234,7 +237,7 @@ void drawBoard() {
 }
 
 //function to initialize the board
-void initializeBoard() {
+void init_board() {
     int i, j;
     for (i = 0; i < BOARD_HEIGHT; i++) {
         for (j = 0; j < BOARD_WIDTH; j++) {
@@ -244,33 +247,35 @@ void initializeBoard() {
 }
 
 //function to spawn a new block
-void spawnBlock() {
+void spawn_block() {
     blockX = (BOARD_WIDTH / 2) - 1;
     blockY = 0;
-    int shape = rand() % 3;
+    shape = 0;//rand() % 3;
 
-    //copy the chosen shape to the currentBlock array
+    //copy the chosen shape to the current block array
     int i, j;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
             switch (shape) {
             case 0:
-                currentBlock[i][j] = LBlock[i][j];
+                current_block[i][j] = LBlock[i][j];
                 break;
             case 1:
-                currentBlock[i][j] = TBlock[i][j];
+                current_block[i][j] = TBlock[i][j];
                 break;
             case 2:
-                currentBlock[i][j] = IBlock[i][j];
+                current_block[i][j] = IBlock[i][j];
                 break;
             }
         }
     }
 
+    orientation = 0;
+
     //check if the new block can be placed, if not, game over
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
-            if (currentBlock[i][j] == MOVING && board[blockY + i][blockX + j] != EMPTY) {
+            if (current_block[i][j] == MOVING && board[blockY + i][blockX + j] != EMPTY) {
                 printf("\nblock[%d][%d] caused gameover\n", blockY + i, blockX + j);
                 printf("Game Over\n");
                 //free(menu);
@@ -279,15 +284,291 @@ void spawnBlock() {
         }
     }
 
+    
+
     //place the new block on the board
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
-            if (currentBlock[i][j] == MOVING) {
+            if (current_block[i][j] == MOVING) {
                 board[blockY + i][blockX + j] = MOVING;
             }
         }
     }
 }
+
+//a clunky way of doing this, the lack of time forces my hand
+rotate_block_left(){
+    for(int i = 0; i < 3; i++){
+        rotate_block_right();
+    }
+}
+
+//rotations are hardcoded due to my significant delay in assignment submition, will come back to this later
+void rotate_block_right() {
+
+
+
+    int count = 0;
+    //T rotation
+    if(shape == 1)
+    {
+
+        switch(orientation){
+            case 0:
+
+                count = 0;
+                for(int i = 0; i < BOARD_HEIGHT; i++){
+                    for(int j = 0; j < BOARD_WIDTH; j++){
+                        if(board[i][j]==MOVING){
+                            if(count == 1){
+                                board[i][j]=EMPTY;
+                                board[i+1][j+1]=MOVING;
+                            }
+                            count++;
+                        }
+                    }
+                }
+            orientation = 1;
+            break;
+            case 1:
+                count = 0;
+                for(int i = 0; i < BOARD_HEIGHT; i++){
+                    for(int j = 0; j < BOARD_WIDTH; j++){
+                        if(board[i][j]==MOVING){
+                            if(count == 0){
+                                board[i][j]=EMPTY;
+                                board[i+1][j-1]=MOVING;
+                            }
+                            count++;
+                        }
+                    }
+                }
+            orientation = 2;
+            break;
+            case 2:
+                count = 0;
+                for(int i = 0; i < BOARD_HEIGHT; i++){
+                    for(int j = 0; j < BOARD_WIDTH; j++){
+                        if(board[i][j]==MOVING){
+                            if(count == 2){
+                                board[i][j]=EMPTY;
+                                board[i-1][j-1]=MOVING;
+                            }
+                            count++;
+                        }
+                    }
+                }
+            orientation = 3;
+            break;
+            case 3:
+                count = 0;
+                for(int i = 0; i < BOARD_HEIGHT; i++){
+                    for(int j = 0; j < BOARD_WIDTH; j++){
+                        if(board[i][j]==MOVING){
+                            if(count == 3){
+                                board[i][j]=EMPTY;
+                                board[i-1][j+1]=MOVING;
+                            }
+                            count++;
+                        }
+                    }
+                }
+            orientation = 0;
+            break;
+        }
+        
+    }
+
+//L rotation
+if(shape == 0)
+{
+
+    switch(orientation){
+        case 0:
+            printf("this gets here\n");
+            count = 0;
+            for(int i = 0; i < BOARD_HEIGHT; i++){
+                for(int j = 0; j < BOARD_WIDTH; j++){
+                    if(board[i][j]==MOVING){
+                        printf("count: %d\n", count);
+                        if(count == 0){
+                            board[i][j]=EMPTY;
+                            board[i+1][j-1]=MOVED;
+                        }
+
+                        if(count == 2){
+                            board[i][j]=EMPTY;
+                            board[i-1][j+1]=MOVED;
+                        }
+                        if(count == 3){
+                            board[i][j]=EMPTY;
+                            board[i][j-2]=MOVED;
+                        }
+
+
+                        count++;
+                    }
+                }
+            }
+        orientation = 1;
+        break;
+        case 1:
+            count = 0;
+            for(int i = 0; i < BOARD_HEIGHT; i++){
+                for(int j = 0; j < BOARD_WIDTH; j++){
+                    if(board[i][j]==MOVING){
+                        if(count == 0){
+                            board[i][j]=EMPTY;
+                            board[i+1][j+1]=MOVED;
+                        }
+                        if(count == 2){
+                            board[i][j]=EMPTY;
+                            board[i-1][j-1]=MOVED;
+                        }
+                        if(count == 3){
+                            board[i][j]=EMPTY;
+                            board[i-2][j]=MOVED;
+                        }
+                        count++;
+                    }
+                }
+            }
+            
+        orientation = 2;
+        break;
+                case 2:
+            count = 0;
+            for(int i = 0; i < BOARD_HEIGHT; i++){
+                for(int j = 0; j < BOARD_WIDTH; j++){
+                    if(board[i][j]==MOVING){
+                        printf("count: %d\n", count);
+                        if(count == 1){
+                            board[i][j]=EMPTY;
+                            board[i+1][j-1]=MOVED;
+
+                        }
+
+                        if(count == 3){
+                            board[i][j]=EMPTY;
+                            board[i-1][j+1]=MOVED;
+
+                        }
+                        if(count == 0){
+                            board[i][j]=EMPTY;
+                            board[i][j+2]=MOVED;
+                        }
+
+
+                        count++;
+                    }
+                }
+            }
+        orientation = 3;
+        break;
+        case 3:
+            count = 0;
+            for(int i = 0; i < BOARD_HEIGHT; i++){
+                for(int j = 0; j < BOARD_WIDTH; j++){
+                    if(board[i][j]==MOVING){
+                        if(count == 1){
+                            board[i][j]=EMPTY;
+                            board[i+1][j+1]=MOVED;
+                        }
+                        if(count == 3){
+                            board[i][j]=EMPTY;
+                            board[i-1][j-1]=MOVED;
+                        }
+                        if(count == 0){
+                            board[i][j]=EMPTY;
+                            board[i+2][j]=MOVED;
+                        }
+                        
+                        count++;
+                    }
+                }
+            }
+            
+        orientation = 0;
+        break;
+    }
+    
+}
+
+//I rotation
+if(shape == 2)
+{
+
+    switch(orientation){
+        case 0:
+            printf("this gets here\n");
+            count = 0;
+            for(int i = 0; i < BOARD_HEIGHT; i++){
+                for(int j = 0; j < BOARD_WIDTH; j++){
+                    if(board[i][j]==MOVING){
+                        printf("count: %d\n", count);
+                        if(count == 0){
+                            board[i][j]=EMPTY;
+                            board[i+1][j-1]=MOVED;
+                        printf("prvnirotace\n");
+                        printf("prvnirotace\n");
+                        printf("prvnirotace\n");
+                        printf("prvnirotace\n");
+                        printf("prvnirotace\n");
+                        drawBoard();
+                        }
+
+                        if(count == 2){
+                            board[i][j]=EMPTY;
+                            board[i-1][j+1]=MOVED;
+                        printf("druharotace\n");
+
+                        printf("druharotace\n");
+
+                        printf("druharotace\n");
+
+                        printf("druharotace\n");
+                        drawBoard();
+                        }
+
+
+                        count++;
+                    }
+                }
+            }
+        orientation = 1;
+        break;
+        case 1:
+            count = 0;
+            for(int i = 0; i < BOARD_HEIGHT; i++){
+                for(int j = 0; j < BOARD_WIDTH; j++){
+                    if(board[i][j]==MOVING){
+                        if(count == 0){
+                            board[i][j]=EMPTY;
+                            board[i+1][j+1]=MOVED;
+                        }
+                        if(count == 2){
+                            board[i][j]=EMPTY;
+                            board[i-1][j-1]=MOVED;
+                        }
+                        count++;
+                    }
+                }
+            }
+            
+        orientation = 0;
+        break;
+    
+    }
+    
+}
+transform_moved();
+
+
+}
+
+
+
+
 
 void transform_moved() {
     printf("\nboard before redraw: \n");
@@ -387,9 +668,10 @@ bool piece_movable_left() {
 }
 
 void move_piece_right() {
+    printf("sem se dostane\n");
     if (piece_movable_right()) {
-        for (int i = 0; i < 11; i++) {
-            for (int j = 10; j > -1; j--) {
+        for (int i = 0; i < BOARD_HEIGHT; i++) {
+            for (int j = BOARD_WIDTH-1; j > -1; j--) {
                 if (board[i][j] == MOVING) {
 
                     board[i][j + 1] = MOVING;
@@ -405,8 +687,8 @@ void move_piece_right() {
 
 void move_piece_left() {
     if (piece_movable_left()) {
-        for (int i = 0; i < 11; i++) {
-            for (int j = 0; j < 11; j++) {
+        for (int i = 0; i < BOARD_HEIGHT; i++) {
+            for (int j = 0; j < BOARD_WIDTH; j++) {
                 if (board[i][j] == MOVING) {
 
                     board[i][j - 1] = MOVING;
@@ -468,7 +750,7 @@ void update_board(unsigned char * mem_base) {
         }
         sleep(1);
 
-        spawnBlock();
+        spawn_block();
     }
 
 }
@@ -508,7 +790,8 @@ void parse_controls() {
     parse_string(5, 130, 0x000000, "Use red knob to navigate main menu.\0", 1);
     parse_string(5, 160, 0x000000, "Use red knob press to select an option.\0", 1);
     parse_string(5, 190, 0x000000, "In game, use red knob to move the pieces.\0", 1);
-    parse_string(5, 220, 0x000000, "In game, use red knob press to quit the game.\0", 1);
+    parse_string(5, 220, 0x000000, "In game, use green knob to rotate the pieces.\0", 1);
+    parse_string(5, 250, 0x000000, "In game, use red knob press to quit the game.\0", 1);
 
     parlcd_write_cmd(parlcd_mem_base, 44);
     for (int i = 0; i < 320; i++) { //320
@@ -752,14 +1035,28 @@ int checkforinput(unsigned char * knob_mem_base, int prev_knob_val) {
         if (!piece_movable_left)
             break;
         move_piece_left();
+        
     }
     //}
     //else if(prev_knob_val - 174762 > int_val){
     for (int i = 0; i < (prev_knob_val - int_val + 302145 / 2) / 262144; i++) {
         if (!piece_movable_right)
-
             break;
         move_piece_right();
+    }
+    if(prev_knob_val - int_val < 10000){
+        for (int i = 0; i < (prev_knob_val - int_val + 400/2) / 900; i++) {
+            if (!piece_movable_right)
+                break;
+            rotate_block_right();   
+        }
+    }
+    if(prev_knob_val - int_val < 10000){
+        for (int i = 0; i < (int_val - prev_knob_val + 400/2) / 900; i++) {
+            if (!piece_movable_left)
+                break;
+            rotate_block_left();   
+        }
     }
     prev_knob_val = int_val;
     //}
@@ -769,8 +1066,7 @@ int checkforinput(unsigned char * knob_mem_base, int prev_knob_val) {
 //git change
 
 int start_game() {
-    int prev_knob_val = 0;
-
+    int prev_knob_val = * (volatile uint32_t * )(knob_mem_base + SPILED_REG_KNOBS_8BIT_o);
     int i, j, k;
     unsigned int c;
 
@@ -797,8 +1093,8 @@ int start_game() {
         exit(1);
     }
 
-    initializeBoard();
-    spawnBlock();
+    init_board();
+    spawn_block();
 
     loop_delay.tv_sec = 0;
     loop_delay.tv_nsec = 1000 * 1000 * 1000;
