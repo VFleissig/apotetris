@@ -2,9 +2,8 @@
   Project main function template for MicroZed based MZ_APO board
   designed by Vaclav Fleissig
 
-  change_me.c      - main file
+  tetris.c      - main file
 
-  include your name there and license for distribution.
 
  *******************************************************************/
 
