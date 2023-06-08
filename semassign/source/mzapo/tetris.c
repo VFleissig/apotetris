@@ -144,7 +144,10 @@ void increment_score(unsigned char * mem_base) {
     *(volatile uint32_t * )(mem_base + SPILED_REG_LED_LINE_o) = score;
     printf("led score:", score);
     if (score >= 64 /*4294967295*/ ) {
+
+        parse_win();
         printf("You won!\n");
+        sleep(1);
         exit(0);
     }
 }
@@ -275,8 +278,11 @@ void spawn_block() {
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
             if (current_block[i][j] == MOVING && board[blockY + i][blockX + j] != EMPTY) {
-                printf("\nblock[%d][%d] caused gameover\n", blockY + i, blockX + j);
+
+                parse_gameover();
+
                 printf("Game Over\n");
+                sleep(1);
                 //free(menu);
                 exit(0);
             }
@@ -799,6 +805,36 @@ void parse_controls() {
 
     sleep(10);
     clear_menu();
+}
+
+void parse_win() {
+
+    clear_menu();
+    parse_string(70, 130, 0xff0000, "You win!\0", 3);
+    parlcd_write_cmd(parlcd_mem_base, 44);
+    for (int i = 0; i < 320; i++) { //320
+        for (int j = 0; j < 320; j++) { //480
+            parlcd_write_data(parlcd_mem_base, menu[(i * 320 + j)]);
+
+        }
+    }
+
+
+}
+
+void parse_gameover() {
+
+    clear_menu();
+    parse_string(45, 130, 0xff0000, "Game Over!\0", 3);
+    parlcd_write_cmd(parlcd_mem_base, 44);
+    for (int i = 0; i < 320; i++) { //320
+        for (int j = 0; j < 320; j++) { //480
+            parlcd_write_data(parlcd_mem_base, menu[(i * 320 + j)]);
+
+        }
+    }
+
+
 }
 
 void parse_menu() {
