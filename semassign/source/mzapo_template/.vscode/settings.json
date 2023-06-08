@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "unistd.h": "c",
+        "mzapo_parlcd.h": "c"
+    }
+}
